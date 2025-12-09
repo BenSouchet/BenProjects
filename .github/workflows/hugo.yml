@@ -44,16 +44,21 @@ jobs:
           fetch-depth: 0
           # Fetch **all** history (not just deploy commit) for Hugo's .GitInfo and .Lastmod
           # See https://discourse.gohugo.io/t/problems-with-gitinfo-in-ci/22480
-      - name: Install Hugo CLI
+      - name: Download Hugo v${{ env.HUGO_VERSION }}
+        run: wget https://github.com/gohugoio/hugo/releases/download/v${{ env.HUGO_VERSION }}/hugo_extended_${{ env.HUGO_VERSION }}_linux-amd64.deb -O hugo_extended_${{ env.HUGO_VERSION }}_linux-amd64.deb
+        # 0.103.0 began new naming convention
+      - name: Install Hugo v${{ env.HUGO_VERSION }}
+        run: sudo dpkg -i hugo*.deb
+      - name: Add ~/local/bin to paths
         run: |
-          wget -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_Linux-64bit.deb \
-          && sudo dpkg -i ${{ runner.temp }}/hugo.deb
-      - name: Download Embedded Dart Sass v${{ env.DART_SASS_VERSION }}
-        run: curl -LJO https://github.com/sass/dart-sass-embedded/releases/download/${{ env.DART_SASS_VERSION }}/sass_embedded-${{ env.DART_SASS_VERSION }}-linux-x64.tar.gz
-      - name: Unpack Embedded Dart Sass v${{ env.DART_SASS_VERSION }}
+          mkdir -p $HOME/.local/bin 
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Install Dart Sass
         run: |
-          tar -xvf sass_embedded-${{ env.DART_SASS_VERSION }}-linux-x64.tar.gz
-          sass_embedded/dart-sass-embedded --version
+          cd $RUNNER_TEMP
+          curl -sSL -o dart-sass.tar.gz https://github.com/sass/dart-sass-embedded/releases/download/${{ env.DART_SASS_VERSION }}/sass_embedded-${{ env.DART_SASS_VERSION }}-linux-x64.tar.gz
+          tar -xvf dart-sass.tar.gz
+          mv ./sass_embedded/dart-sass-embedded $HOME/.local/bin/
       - name: Add to the PATH
         run: echo "$GITHUB_WORKSPACE/sass_embedded" >> $GITHUB_PATH
       - name: Checkout
